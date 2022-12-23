@@ -1,42 +1,17 @@
-import axios from 'axios';
-import { useState } from 'react';
-import { useForm } from '../../hooks/useForm';
 
-export const EmployeeInfo = ({ employee, openModal, setIsNewEmp, setFormState }) => {
+export const EmployeeInfo = ({ employee, openModal, setIsNewEmp, setFormState, setDelete, theformstate }) => {
 
   const onTryEdit = () => {
     setIsNewEmp(false);
+    setFormState(employee);
     openModal(true);
   }
 
-  // const onUpdate = (e, id) => {
-  //   e.preventDefault();
-  //   axios.put(`http://localhost:3050/employee_update/${id}`, formState)
-  //     .then(res => {
-  //       console.log(res);
-  //       if (res.data.error == false) {
-
-  //       } else {
-  //         alert(res.data);
-  //       }
-  //     }).catch(err => {
-  //       console.log(err);
-  //     });
-  // }
-
-  const onDelete = (e, id) => {
-    e.preventDefault();
-    axios.delete(`http://localhost:3050/employee_delete/${id}`, { data: { employee_type: localStorage.getItem("employee_type"), employee_id: localStorage.getItem("employee_id") } })
-      .then(res => {
-        if (res.data.error == false) {
-
-        } else {
-          alert(res.data.respuesta);
-        }
-      }).catch(err => {
-        console.log(err);
-      });
+  const onTryDelete = (emp_id) => {    
+    setDelete(emp_id);
   }
+
+  //el victor es jotillo
 
   return (
     <>
@@ -50,7 +25,7 @@ export const EmployeeInfo = ({ employee, openModal, setIsNewEmp, setFormState })
           </button>
         </td>
         <td>
-          <button variant="primary" onClick={()=>alert()}>
+          <button variant="primary" onClick={ () => onTryDelete(employee.employee_id)}>
             Eliminar
           </button>
         </td>

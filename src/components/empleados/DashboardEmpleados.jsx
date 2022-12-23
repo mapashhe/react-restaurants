@@ -16,28 +16,77 @@ export const DashboardEmpleados = () => {
 
     const { onInputChange, onResetInputs, setFormState, formState,
         employee_id, employee_name, employee_email, employee_type,
-        employee_pass, restaurant_id } = useForm({
+        employee_pass, restaurant_id, user_type_name } = useForm({
             employee_id: '',
             employee_name: '',
             employee_email: '',
-            employee_type: '',
+            employee_type: 1,
             employee_pass: '',
-            restaurant_id: ''
+            restaurant_id: '',
+            user_type_name: ''
         });
 
     const onSendForm = (e) => {
         e.preventDefault();
-        const url = (employee_id === '') ? "http://localhost:3050/add_employee" : `http://localhost:3050/employee_update/${employee_id}`;
-        axios.post(url, formState)
-            .then(res => {
-                if (res.data == "Added!") {
+        (employee_id === '')
+            ? axios.post("http://localhost:3050/add_employee", formState).then(res => { respuesta(res) })
+            : axios.put(`http://localhost:3050/employee_update/${employee_id}`, formState).then(res => { respuesta(res) })
+    }
 
+    const onSendDelete = (emp) => {
+        axios.delete(`http://localhost:3050/employee_delete/${emp}`, formState)
+        .then(res => {
+            const {respuesta, error} = res.data;
+            alert(respuesta);
+            if(error == false){
+                const newEmployeesState = employees.filter(function(emplo) { return emplo.employee_id != emp; });
+                setEmployees([...newEmployeesState]);
+            }
+        }).catch(err => {
+            console.log(err);
+        });
+    }
+
+    
+    const changeValue = (e) => {
+        e.preventDefault();
+        const {value, name} = e.target;
+        console.log(name);
+        setFormState({
+            ...formState,
+            [name]: value,
+            'user_type_name': (value == 1) ? 'user' : 'admin'
+        });
+    }
+
+    const respuesta = (res) => {
+        try {
+            const { id, respuesta, error } = res.data;
+            if (error === false) {
+        if (id) {
+            console.table(formState);
+        setEmployees([...employees, 
+            { ...formState, 
+                "employee_id": id,
+                "user_type_name": (employee_type == 1) ? 'user' : 'admin'
+            }]);
                 } else {
-                    alert(res.data);
+                    const newEmployeesState = employees.map( (emp) => {
+                        if(emp.employee_id == employee_id){
+
+                            return formState;
+                        }
+                        return emp;
+                    });
+                    setEmployees([...newEmployeesState]);
                 }
-            }).catch(err => {
-                console.log(err);
-            });
+                setShow(false);
+            } else {
+                console.log(respuesta);
+            }
+        } catch (err) {
+            console.log(err);
+        };
     }
 
     const opciones = restaurants.map((rest) => ({
@@ -66,6 +115,9 @@ export const DashboardEmpleados = () => {
                             key={employee.employee_id}
                             openModal={setShow}
                             setIsNewEmp={setIsNewEmp}
+                            setFormState={setFormState}
+                            setDelete={onSendDelete}
+                            theformstate= {formState}
                         />)
                     }
                 </tbody>
@@ -76,25 +128,20 @@ export const DashboardEmpleados = () => {
                 <Modal.Header closeButton>
                     <Modal.Title>{(isNewEmp === true) ? ('Nuevo Empleado') : ('Editar Empleado')}</Modal.Title>
                 </Modal.Header>
-
                 <Modal.Body>
                     <form>
                         <div>
                             <label htmlFor="employee_name">Nombre:</label>
                             <input type="text" name="employee_name" value={employee_name} onChange={onInputChange} />
-
                             <label htmlFor="employee_email">Email:</label>
                             <input type="email" name="employee_email" value={employee_email} onChange={onInputChange} />
-
                             <label htmlFor="employee_pass">Password:</label>
                             <input type="password" name="employee_pass" value={employee_pass} onChange={onInputChange} />
-
                             <label htmlFor="employee_type">Type:</label>
-                            <select name="employee_type" className="w-25 p-1" value={employee_type} onChange={onInputChange}>
+                            <select name="employee_type" className="w-25 p-1" value={employee_type} onChange={(e) => changeValue(e)}>
                                 <option value="1">USER</option>
                                 <option value="2">ADMIN</option>
                             </select>
-
                             <label htmlFor="restaurant_id">Restaurant:</label>
                             <select name="restaurant_id" className="w-25 p-1" value={restaurant_id} onChange={onInputChange}>
                                 <option value=''>NA</option>
@@ -107,7 +154,6 @@ export const DashboardEmpleados = () => {
                         </div>
                     </form>
                 </Modal.Body>
-
                 <Modal.Footer>
                     <Button onClick={() => setShow(false)}>
                         Cerrar
